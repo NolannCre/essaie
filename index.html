@@ -1,10 +1,960 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
+
 <head>
-    <meta charset="UTF-8" />
-    <title>title</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📅 Mon Organisateur</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            text-align: center;
+            padding: 20px 15px;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        /* Contrôles */
+        .controls {
+            padding: 20px 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .form-row input {
+            flex: 1;
+        }
+
+        input[type="text"], input[type="time"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input[type="text"]:focus, input[type="time"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-full {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        /* Sélecteur de jours mobile */
+        .days-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .day-checkbox {
+            position: relative;
+        }
+
+        .day-checkbox input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .day-checkbox label {
+            display: block;
+            padding: 10px 8px;
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .day-checkbox input[type="checkbox"]:checked + label {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* Sélecteur de couleurs mobile */
+        .color-picker {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .color-option.selected {
+            border-color: #333;
+            transform: scale(1.2);
+        }
+
+        /* Indicateur prochain événement */
+        .next-event-indicator {
+            margin: 15px;
+            padding: 15px;
+            background: linear-gradient(135deg, #51cf66, #40c057);
+            color: white;
+            border-radius: 12px;
+            animation: pulse 2s infinite;
+        }
+
+        .next-event-title {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .next-event-time {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        /* Grille d'emploi du temps mobile */
+        .schedule-container {
+            padding: 15px;
+            overflow-x: auto;
+        }
+
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: 60px repeat(7, minmax(80px, 1fr));
+            gap: 1px;
+            background: #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+            min-width: 600px;
+        }
+
+        .time-header, .day-header {
+            background: #343a40;
+            color: white;
+            padding: 8px 4px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        .time-slot {
+            background: #f8f9fa;
+            padding: 8px 4px;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 600;
+            color: #6c757d;
+        }
+
+        .schedule-cell {
+            background: white;
+            min-height: 50px;
+            position: relative;
+            border: 1px solid #f1f3f4;
+        }
+
+        .event {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 6px;
+            padding: 4px 6px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 46px;
+            overflow: hidden;
+        }
+
+        .event.completed {
+            background: #6c757d !important;
+            opacity: 0.7;
+        }
+
+        .event.next-event {
+            box-shadow: 0 0 10px rgba(81, 207, 102, 0.8);
+            border: 2px solid #51cf66;
+        }
+
+        .event-content {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .event-title {
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: 2px;
+            word-break: break-word;
+        }
+
+        .event-time {
+            font-size: 9px;
+            opacity: 0.9;
+        }
+
+        .event-checkbox {
+            width: 14px;
+            height: 14px;
+            margin-right: 4px;
+            flex-shrink: 0;
+        }
+
+        .event-delete {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 4px;
+            flex-shrink: 0;
+        }
+
+        .event-continuation {
+            text-align: center;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .event-title-small {
+            font-size: 9px;
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        .event-time-end {
+            font-size: 9px;
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        /* Statistiques mobile */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        /* Contrôles de fichiers */
+        .file-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .file-controls .btn {
+            flex: 1;
+            font-size: 12px;
+            padding: 10px;
+        }
+
+        /* Responsive améliorations */
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .controls {
+                padding: 15px 10px;
+            }
+            
+            .schedule-grid {
+                grid-template-columns: 50px repeat(7, minmax(70px, 1fr));
+                min-width: 550px;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* Couleurs pour les événements */
+        .event.color-red { background: linear-gradient(45deg, #ff6b6b, #ee5a52) !important; }
+        .event.color-green { background: linear-gradient(45deg, #51cf66, #40c057) !important; }
+        .event.color-yellow { background: linear-gradient(45deg, #ffd43b, #fab005) !important; }
+        .event.color-blue { background: linear-gradient(45deg, #339af0, #228be6) !important; }
+        .event.color-purple { background: linear-gradient(45deg, #845ef7, #7048e8) !important; }
+    </style>
 </head>
+
 <body>
-    <h1>truc</h1>
+    <div class="container">
+        <div class="header">
+            <h1>📅 Mon Organisateur</h1>
+            <p>Planifiez votre semaine efficacement</p>
+        </div>
+
+        <div class="controls">
+            <div class="form-group">
+                <input type="text" id="eventTitle" placeholder="Titre de l'événement" required>
+                <div class="form-row">
+                    <input type="time" id="startTime" required>
+                    <input type="time" id="endTime" required>
+                </div>
+                <button class="btn btn-primary btn-full" onclick="addEvent()">Ajouter l'événement</button>
+            </div>
+
+            <div class="form-group">
+                <label style="font-weight: 600; margin-bottom: 10px; display: block;">Sélectionner les jours :</label>
+                <div class="days-selector">
+                    <div class="day-checkbox">
+                        <input type="checkbox" id="lundi" value="lundi">
+                        <label for="lundi">Lun</label>
+                    </div>
+                    <div class="day-checkbox">
+                        <input type="checkbox" id="mardi" value="mardi">
+                        <label for="mardi">Mar</label>
+                    </div>
+                    <div class="day-checkbox">
+                        <input type="checkbox" id="mercredi" value="mercredi">
+                        <label for="mercredi">Mer</label>
+                    </div>
+                    <div class="day-checkbox">
+                        <input type="checkbox" id="jeudi" value="jeudi">
+                        <label for="jeudi">Jeu</label>
+                    </div>
+                    <div class="day-checkbox">
+                        <input type="checkbox" id="vendredi" value="vendredi">
+                        <label for="vendredi">Ven</label>
+                    </div>
+                    <div class="day-checkbox">
+                        <input type="checkbox" id="samedi" value="samedi">
+                        <label for="samedi">Sam</label>
+                    </div>
+                    <div class="day-checkbox">
+                        <input type="checkbox" id="dimanche" value="dimanche">
+                        <label for="dimanche">Dim</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="color-picker">
+                <div class="color-option selected" style="background: linear-gradient(45deg, #667eea, #764ba2)" data-color="default"></div>
+                <div class="color-option" style="background: linear-gradient(45deg, #ff6b6b, #ee5a52)" data-color="red"></div>
+                <div class="color-option" style="background: linear-gradient(45deg, #51cf66, #40c057)" data-color="green"></div>
+                <div class="color-option" style="background: linear-gradient(45deg, #ffd43b, #fab005)" data-color="yellow"></div>
+                <div class="color-option" style="background: linear-gradient(45deg, #339af0, #228be6)" data-color="blue"></div>
+                <div class="color-option" style="background: linear-gradient(45deg, #845ef7, #7048e8)" data-color="purple"></div>
+            </div>
+
+            <div class="file-controls">
+                <button class="btn btn-danger" onclick="clearSchedule()">🗑️ Tout effacer</button>
+                <button class="btn btn-secondary" onclick="saveSchedule()">💾 Sauvegarder</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">📁 Charger</button>
+                <input type="file" id="fileInput" accept=".json" style="display: none;" onchange="loadSchedule(event)">
+            </div>
+        </div>
+
+        <div id="nextEventIndicator" class="next-event-indicator" style="display: none;">
+            <div class="next-event-title">🎯 Prochain événement</div>
+            <div id="nextEventContent"></div>
+        </div>
+
+        <div class="schedule-container">
+            <div class="schedule-grid" id="scheduleGrid">
+                <!-- Grille générée par JavaScript -->
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalEvents">0</div>
+                <div class="stat-label">Événements totaux</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="completedEvents">0</div>
+                <div class="stat-label">Terminés</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="todayEvents">0</div>
+                <div class="stat-label">Aujourd'hui</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="busyDays">0</div>
+                <div class="stat-label">Jours occupés</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const timeSlots = [
+            '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
+            '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
+        ];
+
+        const days = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+        const dayLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+
+        let events = {};
+        let selectedColor = 'default';
+        let eventIdCounter = 0;
+
+        const colorSchemes = {
+            default: 'linear-gradient(45deg, #667eea, #764ba2)',
+            red: 'linear-gradient(45deg, #ff6b6b, #ee5a52)',
+            green: 'linear-gradient(45deg, #51cf66, #40c057)',
+            yellow: 'linear-gradient(45deg, #ffd43b, #fab005)',
+            blue: 'linear-gradient(45deg, #339af0, #228be6)',
+            purple: 'linear-gradient(45deg, #845ef7, #7048e8)'
+        };
+
+        function initializeSchedule() {
+            const grid = document.getElementById('scheduleGrid');
+
+            // Header vide pour le coin
+            grid.innerHTML = '<div class="time-header"></div>';
+
+            // Headers des jours
+            dayLabels.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'day-header';
+                dayHeader.textContent = day;
+                grid.appendChild(dayHeader);
+            });
+
+            // Créer les lignes de temps
+            timeSlots.forEach(time => {
+                // Colonne de temps
+                const timeSlot = document.createElement('div');
+                timeSlot.className = 'time-slot';
+                timeSlot.textContent = time;
+                grid.appendChild(timeSlot);
+
+                // Cellules pour chaque jour
+                days.forEach(day => {
+                    const cell = document.createElement('div');
+                    cell.className = 'schedule-cell';
+                    cell.dataset.day = day;
+                    cell.dataset.time = time;
+                    grid.appendChild(cell);
+                });
+            });
+        }
+
+        function addEvent() {
+            const title = document.getElementById('eventTitle').value.trim();
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+
+            // Récupérer les jours sélectionnés
+            const selectedDays = [];
+            document.querySelectorAll('.days-selector input[type="checkbox"]:checked').forEach(checkbox => {
+                selectedDays.push(checkbox.value);
+            });
+
+            if (!title || !startTime || !endTime) {
+                alert('Veuillez remplir tous les champs');
+                return;
+            }
+
+            if (selectedDays.length === 0) {
+                alert('Veuillez sélectionner au moins un jour');
+                return;
+            }
+
+            if (startTime >= endTime) {
+                alert('L\'heure de fin doit être après l\'heure de début');
+                return;
+            }
+
+            // Ajouter l'événement pour chaque jour sélectionné
+            selectedDays.forEach(day => {
+                const eventId = 'event_' + (++eventIdCounter);
+                const event = {
+                    id: eventId,
+                    title: title,
+                    startTime: startTime,
+                    endTime: endTime,
+                    day: day,
+                    color: selectedColor,
+                    completed: false
+                };
+
+                if (!events[day]) {
+                    events[day] = [];
+                }
+
+                events[day].push(event);
+            });
+
+            // Vider le formulaire
+            document.getElementById('eventTitle').value = '';
+            document.getElementById('startTime').value = '';
+            document.getElementById('endTime').value = '';
+
+            // Décocher toutes les cases
+            document.querySelectorAll('.days-selector input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+
+            renderEvents();
+            updateStats();
+            updateNextEvent();
+        }
+
+        function renderEvents() {
+            // Nettoyer toutes les cellules
+            document.querySelectorAll('.schedule-cell').forEach(cell => {
+                cell.innerHTML = '';
+            });
+
+            // Obtenir le prochain événement pour le mettre en évidence
+            const nextEvent = getNextEvent();
+
+            // Ajouter les événements
+            Object.keys(events).forEach(day => {
+                events[day].forEach(event => {
+                    const startHour = parseInt(event.startTime.split(':')[0]);
+                    const startMinute = parseInt(event.startTime.split(':')[1]);
+                    const endHour = parseInt(event.endTime.split(':')[0]);
+                    const endMinute = parseInt(event.endTime.split(':')[1]);
+
+                    // Vérifier que les heures sont dans timeSlots et créer des blocs pour chaque heure
+                    const availableHours = timeSlots.map(slot => parseInt(slot.split(':')[0]));
+                    
+                    // Trouver toutes les heures concernées par cet événement
+                    const eventHours = [];
+                    for (let hour = startHour; hour < endHour; hour++) {
+                        if (availableHours.includes(hour)) {
+                            eventHours.push(hour);
+                        }
+                    }
+                    
+                    // Si l'événement se termine avec des minutes, ajouter l'heure de fin
+                    if (endMinute > 0 && availableHours.includes(endHour)) {
+                        eventHours.push(endHour);
+                    }
+
+                    // Créer un bloc pour chaque heure
+                    eventHours.forEach((hour, index) => {
+                        const timeSlot = hour.toString().padStart(2, '0') + ':00';
+                        const cell = document.querySelector(`[data-day="${day}"][data-time="${timeSlot}"]`);
+                        
+                        if (cell) {
+                            const eventElement = document.createElement('div');
+                            eventElement.className = `event color-${event.color}`;
+                            
+                            const isFirstSegment = (index === 0);
+                            const isLastSegment = (index === eventHours.length - 1);
+                            
+                            // Appliquer les styles selon l'état
+                            if (event.completed) {
+                                eventElement.classList.add('completed');
+                            }
+
+                            // Marquer le prochain événement
+                            if (nextEvent && nextEvent.id === event.id) {
+                                eventElement.classList.add('next-event');
+                            }
+
+                            // Contenu différent selon le segment
+                            if (isFirstSegment && !isLastSegment) {
+                                // Premier segment d'un événement multi-créneaux
+                                eventElement.innerHTML = `
+                                    <input type="checkbox" class="event-checkbox" ${event.completed ? 'checked' : ''} 
+                                           onchange="toggleEventCompletion('${event.id}', '${day}')">
+                                    <div class="event-content">
+                                        <div class="event-title">${event.title}</div>
+                                        <div class="event-time">${event.startTime} →</div>
+                                    </div>
+                                    <button class="event-delete" onclick="deleteEvent('${event.id}', '${day}')">×</button>
+                                `;
+                            } else if (isLastSegment && !isFirstSegment) {
+                                // Dernier segment
+                                if (hour === endHour && endMinute > 0) {
+                                    // Segment partiel pour les minutes
+                                    const minuteHeight = Math.max(20, (endMinute / 60) * 46);
+                                    eventElement.style.height = `${minuteHeight}px`;
+                                    eventElement.style.maxHeight = `${minuteHeight}px`;
+                                }
+                                
+                                eventElement.innerHTML = `
+                                    <div class="event-content continuation">
+                                        <div class="event-continuation">↓</div>
+                                        <div class="event-time-end">→ ${event.endTime}</div>
+                                    </div>
+                                `;
+                            } else if (!isFirstSegment && !isLastSegment) {
+                                // Segments intermédiaires
+                                eventElement.innerHTML = `
+                                    <div class="event-content continuation">
+                                        <div class="event-continuation">↓</div>
+                                        <div class="event-title-small">${event.title}</div>
+                                    </div>
+                                `;
+                            } else {
+                                // Événement d'une seule heure
+                                eventElement.innerHTML = `
+                                    <input type="checkbox" class="event-checkbox" ${event.completed ? 'checked' : ''} 
+                                           onchange="toggleEventCompletion('${event.id}', '${day}')">
+                                    <div class="event-content">
+                                        <div class="event-title">${event.title}</div>
+                                        <div class="event-time">${event.startTime} - ${event.endTime}</div>
+                                    </div>
+                                    <button class="event-delete" onclick="deleteEvent('${event.id}', '${day}')">×</button>
+                                `;
+                            }
+
+                            cell.appendChild(eventElement);
+                        }
+                    });
+                });
+            });
+        }
+
+        function deleteEvent(eventId, day) {
+            events[day] = events[day].filter(event => event.id !== eventId);
+            if (events[day].length === 0) {
+                delete events[day];
+            }
+            renderEvents();
+            updateStats();
+            updateNextEvent();
+        }
+
+        function toggleEventCompletion(eventId, day) {
+            const event = events[day].find(e => e.id === eventId);
+            if (event) {
+                event.completed = !event.completed;
+                renderEvents();
+                updateStats();
+                updateNextEvent();
+            }
+        }
+
+        function clearSchedule() {
+            if (confirm('Êtes-vous sûr de vouloir effacer tout l\'emploi du temps ?')) {
+                events = {};
+                renderEvents();
+                updateStats();
+                updateNextEvent();
+            }
+        }
+
+        function updateStats() {
+            const totalEvents = Object.values(events).reduce((sum, dayEvents) => sum + dayEvents.length, 0);
+            const completedEvents = Object.values(events).reduce((sum, dayEvents) =>
+                sum + dayEvents.filter(event => event.completed).length, 0);
+            const busyDays = Object.keys(events).length;
+
+            // Simuler "aujourd'hui" avec lundi
+            const todayEvents = events['lundi'] ? events['lundi'].length : 0;
+
+            document.getElementById('totalEvents').textContent = totalEvents;
+            document.getElementById('completedEvents').textContent = completedEvents;
+            document.getElementById('todayEvents').textContent = todayEvents;
+            document.getElementById('busyDays').textContent = busyDays;
+        }
+
+        function getNextEvent() {
+            const now = new Date();
+            const currentDay = now.getDay();
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+
+            const dayOrder = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+            const currentDayName = dayOrder[currentDay];
+
+            let nextEvent = null;
+            let minTimeDiff = Infinity;
+
+            Object.keys(events).forEach(day => {
+                events[day].forEach(event => {
+                    if (event.completed) return;
+
+                    const eventTime = parseInt(event.startTime.split(':')[0]) * 60 +
+                        parseInt(event.startTime.split(':')[1]);
+
+                    let dayIndex = dayOrder.indexOf(day);
+                    let timeDiff;
+
+                    if (dayIndex === currentDay) {
+                        if (eventTime > currentTime) {
+                            timeDiff = eventTime - currentTime;
+                        } else {
+                            timeDiff = (7 * 24 * 60) + eventTime - currentTime;
+                        }
+                    } else {
+                        let dayDiff = dayIndex - currentDay;
+                        if (dayDiff < 0) dayDiff += 7;
+
+                        timeDiff = (dayDiff * 24 * 60) + eventTime - currentTime;
+                    }
+
+                    if (timeDiff < minTimeDiff) {
+                        minTimeDiff = timeDiff;
+                        nextEvent = { ...event, day: day, timeDiff: timeDiff };
+                    }
+                });
+            });
+
+            return nextEvent;
+        }
+
+        function updateNextEvent() {
+            const nextEvent = getNextEvent();
+            const indicator = document.getElementById('nextEventIndicator');
+            const content = document.getElementById('nextEventContent');
+
+            if (nextEvent) {
+                const dayNames = {
+                    'lundi': 'Lundi',
+                    'mardi': 'Mardi',
+                    'mercredi': 'Mercredi',
+                    'jeudi': 'Jeudi',
+                    'vendredi': 'Vendredi',
+                    'samedi': 'Samedi',
+                    'dimanche': 'Dimanche'
+                };
+
+                // Calculer le temps restant
+                const hours = Math.floor(nextEvent.timeDiff / 60);
+                const minutes = nextEvent.timeDiff % 60;
+                let timeText;
+
+                if (hours < 1) {
+                    timeText = `dans ${minutes} minute${minutes > 1 ? 's' : ''}`;
+                } else if (hours < 24) {
+                    timeText = `dans ${hours}h${minutes > 0 ? minutes + 'm' : ''}`;
+                } else {
+                    const days = Math.floor(hours / 24);
+                    const remainingHours = hours % 24;
+                    timeText = `dans ${days} jour${days > 1 ? 's' : ''} ${remainingHours > 0 ? remainingHours + 'h' : ''}`;
+                }
+
+                content.innerHTML = `
+                    <div><strong>${nextEvent.title}</strong></div>
+                    <div>${dayNames[nextEvent.day]} ${nextEvent.startTime} - ${nextEvent.endTime}</div>
+                    <div class="next-event-time">${timeText}</div>
+                `;
+
+                indicator.style.display = 'block';
+            } else {
+                indicator.style.display = 'none';
+            }
+        }
+
+        function saveSchedule() {
+            const scheduleData = {
+                events: events,
+                eventIdCounter: eventIdCounter,
+                savedAt: new Date().toISOString(),
+                version: "1.0"
+            };
+
+            const dataStr = JSON.stringify(scheduleData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `emploi-du-temps-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+
+            setTimeout(() => URL.revokeObjectURL(link.href), 100);
+            alert('Emploi du temps sauvegardé avec succès !');
+        }
+
+        function loadSchedule(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.type !== 'application/json') {
+                alert('Veuillez sélectionner un fichier JSON valide');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const scheduleData = JSON.parse(e.target.result);
+
+                    if (!scheduleData.events || typeof scheduleData.events !== 'object') {
+                        throw new Error('Format de fichier invalide');
+                    }
+
+                    const totalCurrentEvents = Object.values(events).reduce((sum, dayEvents) => sum + dayEvents.length, 0);
+                    if (totalCurrentEvents > 0) {
+                        if (!confirm('Cela remplacera votre emploi du temps actuel. Voulez-vous continuer ?')) {
+                            return;
+                        }
+                    }
+
+                    events = scheduleData.events || {};
+                    eventIdCounter = scheduleData.eventIdCounter || 0;
+
+                    renderEvents();
+                    updateStats();
+                    updateNextEvent();
+
+                    alert(`Emploi du temps chargé avec succès !\nSauvegardé le: ${scheduleData.savedAt ? new Date(scheduleData.savedAt).toLocaleString('fr-FR') : 'Date inconnue'}`);
+
+                } catch (error) {
+                    alert('Erreur lors du chargement du fichier: ' + error.message);
+                }
+            };
+
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // Gestion des couleurs
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.addEventListener('click', function () {
+                    document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedColor = this.dataset.color;
+                });
+            });
+
+            // Initialiser l'application
+            initializeSchedule();
+            updateStats();
+            updateNextEvent();
+            
+            // Mettre à jour le prochain événement toutes les minutes
+            setInterval(updateNextEvent, 60000);
+        });
+    </script>
 </body>
+
 </html>
